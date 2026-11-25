@@ -97,16 +97,16 @@
       </p>
     </div>
 
-    <!-- Panel de API Keys -->
+    <!-- Panel de API Keys (Opcional: para uso avanzado personal) -->
     <section id="configPanel" class="hidden theme-card border rounded-2xl p-5 shadow-xl space-y-4">
       <div class="flex flex-wrap items-center justify-between gap-2">
         <h2 class="text-xs font-bold uppercase tracking-wider" style="color: var(--accent-primary)">
-          Configuración de Motores IA (Opcional — se guarda solo en el caché de tu navegador)
+          Configuración Avanzada (Opcional — la app ya incluye servidores activos por defecto)
         </h2>
       </div>
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <div>
-          <label class="block text-xs theme-muted mb-1">OpenRouter API Key (Recomendada)</label>
+          <label class="block text-xs theme-muted mb-1">OpenRouter API Key</label>
           <input type="password" id="openrouterKey" placeholder="sk-or-v1-..." 
             class="theme-input w-full border rounded-xl px-3 py-2 text-sm focus:outline-none" />
           <a href="https://openrouter.ai/keys" target="_blank" class="text-[11px] hover:underline mt-1 inline-block" style="color: var(--accent-primary)">
@@ -140,7 +140,7 @@
       </div>
       <div class="flex justify-end">
         <button onclick="saveKeys()" class="theme-gradient-btn text-xs font-bold px-5 py-2.5 rounded-xl transition">
-          Guardar configuración
+          Guardar en caché local
         </button>
       </div>
     </section>
@@ -267,6 +267,9 @@
   </div>
 
   <script>
+    // URL de tu Cloudflare Worker con llaves cifradas
+    const CLOUDFLARE_WORKER_URL = 'https://whatdoaiplay-api.dark9juan.workers.dev/';
+
     const PLATFORMS = [
       { id: 'PC', label: '💻 PC (Steam)', theme: 'steam' },
       { id: 'PlayStation 5', label: '🎮 PS5', theme: 'ps5' },
@@ -483,18 +486,30 @@
       renderFavoritesList();
     }
 
+    // Portadas HD: primero clave local si existe, si no Cloudflare Worker
     async function fetchGameImage(title, rawgKey) {
-      if (!rawgKey) return null;
-      try {
-        const res = await fetch(`https://api.rawg.io/api/games?key=${rawgKey}&search=${encodeURIComponent(title)}&page_size=1`);
-        const data = await res.json();
-        return data.results?.[0]?.background_image || null;
-      } catch {
-        return null;
+      if (rawgKey) {
+        try {
+          const res = await fetch(`https://api.rawg.io/api/games?key=${rawgKey}&search=${encodeURIComponent(title)}&page_size=1`);
+          const data = await res.json();
+          if (data.results?.[0]?.background_image) return data.results[0].background_image;
+        } catch {}
       }
+      if (CLOUDFLARE_WORKER_URL) {
+        try {
+          const res = await fetch(CLOUDFLARE_WORKER_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ gameTitle: title })
+          });
+          const data = await res.json();
+          return data.image || null;
+        } catch { return null; }
+      }
+      return null;
     }
 
-    // Reparador inteligente de JSON mal formado
+    // Reparador inteligente de JSON
     function safeParseJSON(text) {
       let cleaned = text.replace(/```json/gi, '').replace(/```/g, '').trim();
       const firstBrace = cleaned.indexOf('{');
@@ -502,42 +517,46 @@
       if (firstBrace !== -1 && lastBrace !== -1) {
         cleaned = cleaned.substring(firstBrace, lastBrace + 1);
       }
-
-      // 1. Intento directo
       try {
         return JSON.parse(cleaned);
       } catch (e) {
-        // 2. Reparación de errores comunes (comas finales, saltos de línea, objetos pegados sin coma)
         let repaired = cleaned
-          .replace(/,\s*([\]}])/g, '$1') // Elimina comas antes de ] o }
-          .replace(/}\s*{/g, '},{')      // Añade coma faltante entre objetos de un arreglo
-          .replace(/]\s*"/g, '],"')      // Añade coma faltante después de un arreglo
-          .replace(/[\u0000-\u0019]+/g, ' '); // Limpia caracteres de control invisibles
-
+          .replace(/,\s*([\]}])/g, '$1')
+          .replace(/}\s*{/g, '},{')
+          .replace(/]\s*"/g, '],"')
+          .replace(/[\u0000-\u0019]+/g, ' ');
         return JSON.parse(repaired);
       }
     }
 
-    // MOTOR 1: OpenRouter
+    // MOTOR PRINCIPAL: Cloudflare Worker (con tus llaves ocultas)
+    async function callCloudflareProxy(prompt) {
+      if (!CLOUDFLARE_WORKER_URL) return null;
+      try {
+        const res = await fetch(CLOUDFLARE_WORKER_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ prompt })
+        });
+        if (!res.ok) return null;
+        const data = await res.json();
+        const parsed = safeParseJSON(data.raw);
+        if (parsed && Array.isArray(parsed.juegos)) {
+          return { data: parsed, engine: `${data.engine}` };
+        }
+      } catch { return null; }
+      return null;
+    }
+
+    // Motores opcionales si el usuario ingresó sus propias claves locales
     async function callOpenRouter(apiKey, prompt) {
-      const freeModels = [
-        'meta-llama/llama-3.3-70b-instruct:free',
-        'mistralai/mistral-small-3.1-24b-instruct:free',
-        'google/gemma-3-27b-it:free'
-      ];
+      const freeModels = ['meta-llama/llama-3.3-70b-instruct:free', 'mistralai/mistral-small-3.1-24b-instruct:free'];
       for (const model of freeModels) {
         try {
           const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
             method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${apiKey}`,
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-              model: model,
-              messages: [{ role: 'user', content: prompt }],
-              temperature: 0.7
-            })
+            headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ model, messages: [{ role: 'user', content: prompt }], temperature: 0.7 })
           });
           if (!res.ok) continue;
           const data = await res.json();
@@ -548,23 +567,14 @@
       return null;
     }
 
-    // MOTOR 2: Groq
     async function callGroq(apiKey, prompt) {
       const groqModels = ['llama-3.3-70b-versatile', 'llama-3.1-8b-instant'];
       for (const model of groqModels) {
         try {
           const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
             method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${apiKey}`,
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-              model: model,
-              messages: [{ role: 'user', content: prompt }],
-              response_format: { type: 'json_object' },
-              temperature: 0.7
-            })
+            headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ model, messages: [{ role: 'user', content: prompt }], response_format: { type: 'json_object' }, temperature: 0.7 })
           });
           if (!res.ok) continue;
           const data = await res.json();
@@ -575,38 +585,25 @@
       return null;
     }
 
-    // MOTOR 3: Google Gemini
     async function callGemini(apiKey, prompt) {
       try {
-        const listRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`);
-        if (!listRes.ok) return null;
-        const listData = await listRes.json();
-        const models = (listData.models || [])
-          .filter(m => m.supportedGenerationMethods?.includes('generateContent') && m.name.includes('flash'))
-          .map(m => m.name)
-          .slice(0, 3);
-
-        for (const modelFullName of models) {
-          const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/${modelFullName}:generateContent?key=${apiKey}`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              contents: [{ parts: [{ text: prompt }] }],
-              generationConfig: { temperature: 0.7, maxOutputTokens: 4096, responseMimeType: "application/json" }
-            })
-          });
-          if (!res.ok) continue;
-          const data = await res.json();
-          const parsed = safeParseJSON(data.candidates[0].content.parts[0].text);
-          if (parsed && Array.isArray(parsed.juegos)) return { data: parsed, engine: `Google (${modelFullName.replace('models/', '')})` };
-        }
+        const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: prompt }] }],
+            generationConfig: { temperature: 0.7, maxOutputTokens: 4096, responseMimeType: "application/json" }
+          })
+        });
+        if (!res.ok) return null;
+        const data = await res.json();
+        const parsed = safeParseJSON(data.candidates[0].content.parts[0].text);
+        if (parsed && Array.isArray(parsed.juegos)) return { data: parsed, engine: 'Google Gemini Flash' };
       } catch { return null; }
       return null;
     }
 
-    // MOTOR 4: Pollinations AI con reintento automático silencioso
     async function callPollinationsFree(prompt) {
-      let lastErr = null;
       for (let attempt = 1; attempt <= 2; attempt++) {
         try {
           const res = await fetch('https://text.pollinations.ai/openai', {
@@ -615,24 +612,22 @@
             body: JSON.stringify({
               model: 'openai',
               messages: [
-                { role: 'system', content: 'Eres un experto en videojuegos. Responde siempre ÚNICAMENTE con un objeto JSON válido, sin bloques markdown ni comillas dobles dentro de los textos.' },
+                { role: 'system', content: 'Eres un experto en videojuegos. Responde siempre ÚNICAMENTE con un objeto JSON válido.' },
                 { role: 'user', content: prompt }
               ],
               response_format: { type: 'json_object' },
               seed: Math.floor(Math.random() * 100000) + attempt
             })
           });
-          if (!res.ok) throw new Error('Servidor público ocupado.');
+          if (!res.ok) continue;
           const data = await res.json();
           const parsed = safeParseJSON(data.choices[0].message.content);
           if (parsed && Array.isArray(parsed.juegos)) {
-            return { data: parsed, engine: 'WhatDoAIplay Cloud Engine (Libre)' };
+            return { data: parsed, engine: 'WhatDoAIplay Cloud Engine (Respaldo)' };
           }
-        } catch (err) {
-          lastErr = err;
-        }
+        } catch {}
       }
-      throw new Error('La respuesta del servidor gratuito llegó incompleta. Presiona el botón nuevamente o agrega una API Key gratuita en ⚙️ API Keys.');
+      throw new Error('No se pudo conectar con los motores de IA en este momento. Intenta de nuevo.');
     }
 
     async function generateRecommendations() {
@@ -684,23 +679,29 @@ Devuelve un JSON válido con esta estructura exacta (no uses comillas dobles den
       try {
         let finalOutcome = null;
 
+        // 1. Si el usuario puso llaves locales propias, darles prioridad
         if (!finalOutcome && openrouterKey) {
           loadingText.textContent = 'Consultando motor OpenRouter...';
           finalOutcome = await callOpenRouter(openrouterKey, prompt);
         }
-
         if (!finalOutcome && groqKey) {
-          loadingText.textContent = 'Consultando motor ultrarrápido Groq...';
+          loadingText.textContent = 'Consultando motor Groq...';
           finalOutcome = await callGroq(groqKey, prompt);
         }
-
         if (!finalOutcome && geminiKey) {
           loadingText.textContent = 'Consultando motor Google Gemini...';
           finalOutcome = await callGemini(geminiKey, prompt);
         }
 
+        // 2. Motor Principal en Cloudflare (usa tus llaves ocultas sin pedir nada al usuario)
         if (!finalOutcome) {
-          loadingText.textContent = 'Generando recomendaciones en la nube...';
+          loadingText.textContent = 'Consultando servidores de WhatDoAIplay...';
+          finalOutcome = await callCloudflareProxy(prompt);
+        }
+
+        // 3. Respaldo público libre
+        if (!finalOutcome) {
+          loadingText.textContent = 'Conectando con motor de respaldo en la nube...';
           finalOutcome = await callPollinationsFree(prompt);
         }
 
