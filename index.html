@@ -101,7 +101,7 @@
     <section id="configPanel" class="hidden theme-card border rounded-2xl p-5 shadow-xl space-y-4">
       <div class="flex flex-wrap items-center justify-between gap-2">
         <h2 class="text-xs font-bold uppercase tracking-wider" style="color: var(--accent-primary)">
-          Configuración de Motores IA (Opcional — ya incluye motor gratuito sin clave)
+          Configuración de Motores IA (Opcional — se guarda solo en el caché de tu navegador)
         </h2>
       </div>
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -460,7 +460,7 @@
         item.innerHTML = `
           <div>
             <h4 class="font-bold text-sm">${juego.titulo} <span class="text-xs theme-muted">(${juego.anio})</span></h4>
-            <p class="text-xs theme-muted mt-0.5">${juego.plataformas_disponibles.join(', ')} • ${juego.genero_principal}</p>
+            <p class="text-xs theme-muted mt-0.5">${(juego.plataformas_disponibles || []).join(', ')} • ${juego.genero_principal}</p>
           </div>
           <div class="flex items-center gap-2">
             <a href="https://www.youtube.com/results?search_query=${encodeURIComponent(juego.titulo + ' official trailer')}" target="_blank"
@@ -494,6 +494,7 @@
       }
     }
 
+    // Reparador inteligente de JSON mal formado
     function safeParseJSON(text) {
       let cleaned = text.replace(/```json/gi, '').replace(/```/g, '').trim();
       const firstBrace = cleaned.indexOf('{');
@@ -501,7 +502,20 @@
       if (firstBrace !== -1 && lastBrace !== -1) {
         cleaned = cleaned.substring(firstBrace, lastBrace + 1);
       }
-      return JSON.parse(cleaned);
+
+      // 1. Intento directo
+      try {
+        return JSON.parse(cleaned);
+      } catch (e) {
+        // 2. Reparación de errores comunes (comas finales, saltos de línea, objetos pegados sin coma)
+        let repaired = cleaned
+          .replace(/,\s*([\]}])/g, '$1') // Elimina comas antes de ] o }
+          .replace(/}\s*{/g, '},{')      // Añade coma faltante entre objetos de un arreglo
+          .replace(/]\s*"/g, '],"')      // Añade coma faltante después de un arreglo
+          .replace(/[\u0000-\u0019]+/g, ' '); // Limpia caracteres de control invisibles
+
+        return JSON.parse(repaired);
+      }
     }
 
     // MOTOR 1: OpenRouter
@@ -590,25 +604,35 @@
       return null;
     }
 
-    // MOTOR 4: Pollinations AI (Respaldo público sin clave)
+    // MOTOR 4: Pollinations AI con reintento automático silencioso
     async function callPollinationsFree(prompt) {
-      const res = await fetch('https://text.pollinations.ai/openai', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          model: 'openai',
-          messages: [
-            { role: 'system', content: 'Eres un experto en videojuegos. Responde siempre ÚNICAMENTE con JSON válido sin markdown.' },
-            { role: 'user', content: prompt }
-          ],
-          seed: Math.floor(Math.random() * 100000)
-        })
-      });
-      if (!res.ok) throw new Error('Error de conexión con el servidor público.');
-      const data = await res.json();
-      const parsed = safeParseJSON(data.choices[0].message.content);
-      if (parsed && Array.isArray(parsed.juegos)) return { data: parsed, engine: 'WhatDoAIplay Cloud Engine (Libre)' };
-      throw new Error('Formato inesperado del servidor.');
+      let lastErr = null;
+      for (let attempt = 1; attempt <= 2; attempt++) {
+        try {
+          const res = await fetch('https://text.pollinations.ai/openai', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              model: 'openai',
+              messages: [
+                { role: 'system', content: 'Eres un experto en videojuegos. Responde siempre ÚNICAMENTE con un objeto JSON válido, sin bloques markdown ni comillas dobles dentro de los textos.' },
+                { role: 'user', content: prompt }
+              ],
+              response_format: { type: 'json_object' },
+              seed: Math.floor(Math.random() * 100000) + attempt
+            })
+          });
+          if (!res.ok) throw new Error('Servidor público ocupado.');
+          const data = await res.json();
+          const parsed = safeParseJSON(data.choices[0].message.content);
+          if (parsed && Array.isArray(parsed.juegos)) {
+            return { data: parsed, engine: 'WhatDoAIplay Cloud Engine (Libre)' };
+          }
+        } catch (err) {
+          lastErr = err;
+        }
+      }
+      throw new Error('La respuesta del servidor gratuito llegó incompleta. Presiona el botón nuevamente o agrega una API Key gratuita en ⚙️ API Keys.');
     }
 
     async function generateRecommendations() {
