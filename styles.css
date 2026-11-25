@@ -1,0 +1,287 @@
+/* =========================================
+   VARIABLES DE TEMAS POR CONSOLA
+   ========================================= */
+:root, [data-theme="default"] {
+  --bg-main: #030712;
+  --bg-card: rgba(15, 23, 42, 0.85);
+  --bg-input: #090d1a;
+  --border-color: rgba(148, 163, 184, 0.15);
+  --text-main: #f8fafc;
+  --text-muted: #94a3b8;
+  --accent-primary: #6366f1;
+  --accent-secondary: #a855f7;
+  --accent-text: #ffffff;
+  --glow-color: rgba(99, 102, 241, 0.25);
+  --badge-bg: rgba(99, 102, 241, 0.15);
+  --badge-text: #a5b4fc;
+  --badge-border: rgba(99, 102, 241, 0.35);
+}
+
+/* XBOX: Negro y Verde Neón */
+[data-theme="xbox"] {
+  --bg-main: #050705;
+  --bg-card: rgba(16, 20, 16, 0.88);
+  --bg-input: #0a0e0a;
+  --border-color: rgba(34, 197, 94, 0.22);
+  --text-main: #f2f2f2;
+  --text-muted: #9ca3af;
+  --accent-primary: #107c10;
+  --accent-secondary: #22c55e;
+  --accent-text: #ffffff;
+  --glow-color: rgba(34, 197, 94, 0.22);
+  --badge-bg: rgba(16, 124, 16, 0.22);
+  --badge-text: #4ade80;
+  --badge-border: rgba(34, 197, 94, 0.4);
+}
+
+/* PS5: Blanco Puro y Azul PlayStation */
+[data-theme="ps5"] {
+  --bg-main: #eef2f6;
+  --bg-card: rgba(255, 255, 255, 0.92);
+  --bg-input: #f8fafc;
+  --border-color: rgba(0, 67, 156, 0.16);
+  --text-main: #0f172a;
+  --text-muted: #475569;
+  --accent-primary: #00439c;
+  --accent-secondary: #0070d1;
+  --accent-text: #ffffff;
+  --glow-color: rgba(0, 112, 209, 0.18);
+  --badge-bg: rgba(0, 112, 209, 0.1);
+  --badge-text: #00439c;
+  --badge-border: rgba(0, 112, 209, 0.3);
+}
+
+/* NINTENDO: Blanco con Rojo y Azul Joy-Con */
+[data-theme="nintendo"] {
+  --bg-main: #f7f7f9;
+  --bg-card: rgba(255, 255, 255, 0.94);
+  --bg-input: #f4f4f5;
+  --border-color: rgba(230, 0, 18, 0.16);
+  --text-main: #18181b;
+  --text-muted: #52525b;
+  --accent-primary: #e60012;
+  --accent-secondary: #0ab9e6;
+  --accent-text: #ffffff;
+  --glow-color: rgba(230, 0, 18, 0.15);
+  --badge-bg: rgba(10, 185, 230, 0.12);
+  --badge-text: #0284c7;
+  --badge-border: rgba(10, 185, 230, 0.4);
+}
+
+/* PC / STEAM: Azul Pizarra y Cian */
+[data-theme="steam"] {
+  --bg-main: #12161d;
+  --bg-card: rgba(27, 40, 56, 0.88);
+  --bg-input: #101822;
+  --border-color: rgba(102, 192, 244, 0.22);
+  --text-main: #c7d5e0;
+  --text-muted: #8f98a0;
+  --accent-primary: #1a9fff;
+  --accent-secondary: #66c0f4;
+  --accent-text: #0b141e;
+  --glow-color: rgba(26, 159, 255, 0.22);
+  --badge-bg: rgba(102, 192, 244, 0.15);
+  --badge-text: #66c0f4;
+  --badge-border: rgba(102, 192, 244, 0.35);
+}
+
+/* MÓVIL: Esmeralda y Cian */
+[data-theme="mobile"] {
+  --bg-main: #060a12;
+  --bg-card: rgba(17, 24, 39, 0.88);
+  --bg-input: #090d16;
+  --border-color: rgba(6, 182, 212, 0.22);
+  --text-main: #f9fafb;
+  --text-muted: #9ca3af;
+  --accent-primary: #059669;
+  --accent-secondary: #06b6d4;
+  --accent-text: #ffffff;
+  --glow-color: rgba(6, 182, 212, 0.22);
+  --badge-bg: rgba(6, 182, 212, 0.15);
+  --badge-text: #22d3ee;
+  --badge-border: rgba(6, 182, 212, 0.35);
+}
+
+/* =========================================
+   ESTILOS BASE Y RESPLANDOR AMBIENTAL
+   ========================================= */
+body {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  background-color: var(--bg-main);
+  color: var(--text-main);
+  transition: background-color 0.4s ease, color 0.4s ease;
+  position: relative;
+  overflow-x: hidden;
+}
+
+.font-display {
+  font-family: 'Space Grotesk', sans-serif;
+}
+
+.ambient-glow {
+  position: fixed;
+  top: -15%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 90vw;
+  height: 55vh;
+  background: radial-gradient(circle, var(--glow-color) 0%, transparent 70%);
+  pointer-events: none;
+  z-index: 0;
+  animation: pulseGlow 7s ease-in-out infinite alternate;
+  transition: background 0.5s ease;
+}
+
+@keyframes pulseGlow {
+  0% { transform: translateX(-50%) scale(0.96); opacity: 0.75; }
+  100% { transform: translateX(-50%) scale(1.06); opacity: 1; }
+}
+
+.theme-card {
+  background-color: var(--bg-card);
+  border-color: var(--border-color);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  transition: background-color 0.35s ease, border-color 0.35s ease, transform 0.3s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.3s ease;
+}
+
+.theme-input {
+  background-color: var(--bg-input);
+  border-color: var(--border-color);
+  color: var(--text-main);
+  transition: all 0.2s ease;
+}
+
+.theme-input:focus {
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 0 3px var(--glow-color);
+}
+
+.theme-muted {
+  color: var(--text-muted);
+}
+
+/* =========================================
+   BOTONES Y CHIPS CON MICRO-INTERACCIONES
+   ========================================= */
+.theme-gradient-btn {
+  background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-secondary) 100%);
+  background-size: 200% 200%;
+  color: var(--accent-text);
+  box-shadow: 0 8px 25px -5px var(--glow-color);
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.theme-gradient-btn:hover {
+  background-position: right center;
+  transform: translateY(-2px);
+  box-shadow: 0 12px 30px -4px var(--glow-color);
+}
+
+.chip-btn {
+  background-color: var(--bg-input);
+  border-color: var(--border-color);
+  color: var(--text-main);
+  transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.chip-btn:hover {
+  border-color: var(--accent-primary);
+  transform: translateY(-2px);
+}
+
+.chip-btn:active {
+  transform: scale(0.95);
+}
+
+.chip-btn.active, .count-btn.active {
+  background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-secondary) 100%);
+  border-color: var(--accent-secondary);
+  color: var(--accent-text);
+  font-weight: 700;
+  box-shadow: 0 4px 15px -3px var(--glow-color);
+}
+
+.theme-badge {
+  background-color: var(--badge-bg);
+  color: var(--badge-text);
+  border-color: var(--badge-border);
+}
+
+.theme-dot.active-dot {
+  transform: scale(1.25);
+  box-shadow: 0 0 0 2px var(--bg-main), 0 0 0 4px var(--accent-primary);
+}
+
+/* =========================================
+   TARJETAS HOLOGRÁFICAS Y ANIMACIONES
+   ========================================= */
+@keyframes fadeSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(24px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.animate-card {
+  opacity: 0;
+  animation: fadeSlideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Efecto de destello diagonal al pasar el mouse sobre la tarjeta */
+.game-card {
+  position: relative;
+  overflow: hidden;
+}
+
+.game-card::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -120%;
+  width: 60%;
+  height: 100%;
+  background: linear-gradient(
+    to right,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.14) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  transform: skewX(-25deg);
+  transition: left 0.65s ease;
+  pointer-events: none;
+}
+
+.game-card:hover::after {
+  left: 160%;
+}
+
+.game-card:hover {
+  border-color: var(--accent-primary);
+  box-shadow: 0 20px 35px -12px var(--glow-color);
+}
+
+/* =========================================
+   SKELETON LOADERS (CARGA ANIMADA)
+   ========================================= */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.skeleton-box {
+  background: linear-gradient(
+    90deg,
+    rgba(148, 163, 184, 0.08) 25%,
+    rgba(148, 163, 184, 0.18) 50%,
+    rgba(148, 163, 184, 0.08) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite linear;
+}

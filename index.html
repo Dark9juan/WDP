@@ -1,0 +1,858 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#6366f1" />
+  <title>WhatDoAIplay? — Descubre tu próximo juego con IA</title>
+  
+  <link rel="icon" type="image/jpeg" href="logo.jpg" />
+  <link rel="apple-touch-icon" href="logo.jpg" />
+  <link rel="manifest" href="manifest.json" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body data-theme="default" class="min-h-screen">
+
+  <div class="ambient-glow"></div>
+
+  <!-- Navbar -->
+  <header class="theme-card border-b sticky top-0 z-30">
+    <div class="max-w-6xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-3">
+      
+      <!-- Logo WhatDoAIplay? -->
+      <a href="#" class="flex items-center group">
+        <div class="bg-[#0e1522] h-11 md:h-12 w-44 md:w-52 rounded-xl border border-slate-700/80 shadow-md overflow-hidden flex items-center justify-center">
+          <img src="logo.jpg" alt="WhatDoAIplay?" 
+               class="w-full h-full object-cover scale-125 group-hover:scale-130 transition duration-300"
+               onerror="this.style.display='none'; document.getElementById('fallbackLogo').classList.remove('hidden');" />
+          
+          <span id="fallbackLogo" class="hidden font-display text-lg md:text-xl font-bold tracking-tight text-white flex items-center gap-1.5">
+            <span>🎮</span> WhatDo<span style="color: var(--accent-secondary)">AI</span>play?
+          </span>
+        </div>
+      </a>
+
+      <!-- Selector de Temas Visuales -->
+      <div class="flex items-center gap-2 px-3.5 py-1.5 rounded-full border shadow-sm" style="border-color: var(--border-color); background-color: var(--bg-input)">
+        <span class="text-[11px] font-bold uppercase tracking-wider theme-muted hidden md:inline mr-1">Tema:</span>
+        
+        <button onclick="setTheme('default')" title="WhatDoAIplay Clásico" data-theme-btn="default"
+          class="theme-dot active-dot w-5 h-5 rounded-full bg-gradient-to-tr from-indigo-600 to-purple-500 transition"></button>
+        
+        <button onclick="setTheme('xbox')" title="Xbox (Negro / Verde)" data-theme-btn="xbox"
+          class="theme-dot w-5 h-5 rounded-full bg-gradient-to-tr from-black via-neutral-900 to-green-500 border border-green-500/50 transition"></button>
+        
+        <button onclick="setTheme('ps5')" title="PS5 (Blanco / Azul)" data-theme-btn="ps5"
+          class="theme-dot w-5 h-5 rounded-full bg-gradient-to-tr from-white to-blue-600 border border-blue-400 transition"></button>
+        
+        <button onclick="setTheme('nintendo')" title="Nintendo Switch (Rojo / Azul)" data-theme-btn="nintendo"
+          class="theme-dot w-5 h-5 rounded-full bg-gradient-to-r from-[#e60012] to-[#0ab9e6] transition"></button>
+        
+        <button onclick="setTheme('steam')" title="PC / Steam (Azul Pizarra / Cian)" data-theme-btn="steam"
+          class="theme-dot w-5 h-5 rounded-full bg-gradient-to-tr from-[#171a21] to-[#66c0f4] border border-sky-400/50 transition"></button>
+        
+        <button onclick="setTheme('mobile')" title="Móvil (Esmeralda / Cian)" data-theme-btn="mobile"
+          class="theme-dot w-5 h-5 rounded-full bg-gradient-to-tr from-emerald-600 to-cyan-400 transition"></button>
+      </div>
+
+      <!-- Botones Derecha: Música, Guardados y Config -->
+      <div class="flex items-center gap-2">
+        <button id="musicBtn" onclick="toggleAmbientMusic()" 
+          class="theme-input border text-xs font-bold px-3 py-2 rounded-xl hover:opacity-85 transition flex items-center gap-1.5"
+          title="Activar/Desactivar música ambiental de menú">
+          <span id="musicIcon">🔇</span>
+          <span id="musicLabel" class="hidden md:inline">Música</span>
+        </button>
+
+        <button onclick="toggleFavoritesModal()" class="theme-input border text-xs font-bold px-3 py-2 rounded-xl hover:opacity-85 transition flex items-center gap-1.5">
+          <span>❤️</span>
+          <span class="hidden sm:inline">Guardados</span>
+          <span id="favCounter" class="theme-badge px-1.5 py-0.2 rounded-md text-[11px]">0</span>
+        </button>
+
+        <button onclick="toggleConfig()" class="theme-input border text-xs font-bold px-3 py-2 rounded-xl hover:opacity-85 transition">
+          ⚙️ API Keys
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-6xl mx-auto px-4 py-7 space-y-8 relative z-10">
+
+    <!-- Hero Intro -->
+    <div class="text-center max-w-2xl mx-auto space-y-2">
+      <div class="inline-flex items-center gap-2 theme-badge border px-3 py-1 rounded-full text-xs font-bold">
+        <span>✨ Curaduría Gamer Multi-Motor IA</span>
+      </div>
+      <h2 class="font-display text-2xl md:text-4xl font-bold tracking-tight">
+        ¿No sabes qué jugar hoy?
+      </h2>
+      <p class="text-sm md:text-base theme-muted">
+        Elige tus consolas, selecciona tus géneros favoritos y deja que la IA arme tu lista perfecta.
+      </p>
+    </div>
+
+    <!-- Panel de API Keys -->
+    <section id="configPanel" class="hidden theme-card border rounded-2xl p-5 shadow-xl space-y-4">
+      <div class="flex flex-wrap items-center justify-between gap-2">
+        <h2 class="text-xs font-bold uppercase tracking-wider" style="color: var(--accent-primary)">
+          Configuración de Motores IA (Opcional — ya incluye motor gratuito sin clave)
+        </h2>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div>
+          <label class="block text-xs theme-muted mb-1">OpenRouter API Key (Recomendada)</label>
+          <input type="password" id="openrouterKey" placeholder="sk-or-v1-..." 
+            class="theme-input w-full border rounded-xl px-3 py-2 text-sm focus:outline-none" />
+          <a href="https://openrouter.ai/keys" target="_blank" class="text-[11px] hover:underline mt-1 inline-block" style="color: var(--accent-primary)">
+            Obtener gratis en OpenRouter →
+          </a>
+        </div>
+        <div>
+          <label class="block text-xs theme-muted mb-1">Groq API Key</label>
+          <input type="password" id="groqKey" placeholder="gsk_..." 
+            class="theme-input w-full border rounded-xl px-3 py-2 text-sm focus:outline-none" />
+          <a href="https://console.groq.com/keys" target="_blank" class="text-[11px] hover:underline mt-1 inline-block" style="color: var(--accent-primary)">
+            Obtener gratis en Groq →
+          </a>
+        </div>
+        <div>
+          <label class="block text-xs theme-muted mb-1">Google Gemini API Key</label>
+          <input type="password" id="geminiKey" placeholder="AIzaSy..." 
+            class="theme-input w-full border rounded-xl px-3 py-2 text-sm focus:outline-none" />
+          <a href="https://aistudio.google.com/app/apikey" target="_blank" class="text-[11px] hover:underline mt-1 inline-block" style="color: var(--accent-primary)">
+            Obtener gratis en AI Studio →
+          </a>
+        </div>
+        <div>
+          <label class="block text-xs theme-muted mb-1">RAWG.io API Key (Portadas HD)</label>
+          <input type="password" id="rawgKey" placeholder="Opcional..." 
+            class="theme-input w-full border rounded-xl px-3 py-2 text-sm focus:outline-none" />
+          <a href="https://rawg.io/apidocs" target="_blank" class="text-[11px] theme-muted hover:underline mt-1 inline-block">
+            Obtener gratis en RAWG.io →
+          </a>
+        </div>
+      </div>
+      <div class="flex justify-end">
+        <button onclick="saveKeys()" class="theme-gradient-btn text-xs font-bold px-5 py-2.5 rounded-xl transition">
+          Guardar configuración
+        </button>
+      </div>
+    </section>
+
+    <!-- Formulario Principal -->
+    <section class="theme-card border rounded-3xl p-6 md:p-8 space-y-7 shadow-xl">
+      
+      <!-- 1. Plataformas -->
+      <div>
+        <div class="flex items-center justify-between mb-3.5">
+          <label class="text-sm md:text-base font-extrabold flex items-center gap-2">
+            <span class="theme-gradient-btn w-6 h-6 rounded-lg inline-flex items-center justify-center text-xs font-bold">1</span>
+            ¿En qué plataformas juegas?
+          </label>
+          <span class="text-xs theme-muted hidden sm:inline">Adapta el tema y la música automáticamente</span>
+        </div>
+        <div id="platformsContainer" class="flex flex-wrap gap-2.5"></div>
+      </div>
+
+      <hr style="border-color: var(--border-color)" />
+
+      <!-- 2. Géneros -->
+      <div>
+        <div class="flex items-center justify-between mb-3.5">
+          <label class="text-sm md:text-base font-extrabold flex items-center gap-2">
+            <span class="theme-gradient-btn w-6 h-6 rounded-lg inline-flex items-center justify-center text-xs font-bold">2</span>
+            ¿Qué géneros te gustan?
+          </label>
+          <span class="text-xs theme-muted hidden sm:inline">Selección múltiple</span>
+        </div>
+        <div id="genresContainer" class="flex flex-wrap gap-2.5"></div>
+      </div>
+
+      <hr style="border-color: var(--border-color)" />
+
+      <!-- 3. Cantidad y Toque Personal -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div>
+          <label class="text-sm md:text-base font-extrabold flex items-center gap-2 mb-3.5">
+            <span class="theme-gradient-btn w-6 h-6 rounded-lg inline-flex items-center justify-center text-xs font-bold">3</span>
+            ¿Cuántos juegos?
+          </label>
+          <div class="grid grid-cols-3 gap-2.5">
+            <button type="button" onclick="selectCount(3)" data-count="3" class="count-btn chip-btn active border py-2.5 rounded-xl font-extrabold text-sm transition">
+              3
+            </button>
+            <button type="button" onclick="selectCount(5)" data-count="5" class="count-btn chip-btn border py-2.5 rounded-xl font-extrabold text-sm transition">
+              5
+            </button>
+            <button type="button" onclick="selectCount(10)" data-count="10" class="count-btn chip-btn border py-2.5 rounded-xl font-extrabold text-sm transition">
+              10
+            </button>
+          </div>
+        </div>
+
+        <div class="md:col-span-2">
+          <label class="text-sm md:text-base font-extrabold flex items-center gap-2 mb-3.5">
+            <span class="theme-gradient-btn w-6 h-6 rounded-lg inline-flex items-center justify-center text-xs font-bold">4</span>
+            Preferencia extra <span class="text-xs font-normal theme-muted">(Opcional)</span>
+          </label>
+          <input type="text" id="extraPrompt" 
+            placeholder="Ej: Juegos cortos de menos de 10 horas, cooperativo local, buena historia o parecidos a Zelda..." 
+            class="theme-input w-full border rounded-xl px-4 py-2.5 text-sm focus:outline-none transition" />
+        </div>
+      </div>
+
+      <!-- Botón Principal -->
+      <div class="pt-2">
+        <button id="generateBtn" onclick="generateRecommendations()" 
+          class="theme-gradient-btn w-full font-extrabold text-base py-4 px-6 rounded-2xl flex items-center justify-center gap-2.5">
+          <span>✨ Descubrir qué jugar con WhatDoAIplay?</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- Estado de Carga con Skeleton Cards -->
+    <div id="loadingState" class="hidden space-y-5 pt-2">
+      <div class="flex items-center justify-center gap-3">
+        <div class="w-5 h-5 border-2 border-t-transparent rounded-full animate-spin" style="border-color: var(--accent-primary); border-top-color: transparent;"></div>
+        <p id="loadingText" class="font-bold text-sm md:text-base animate-pulse">Analizando catálogos y buscando los mejores títulos...</p>
+      </div>
+      <div id="skeletonGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+    </div>
+
+    <!-- Error -->
+    <div id="errorBox" class="hidden bg-red-500/15 border border-red-500 text-red-500 px-5 py-4 rounded-2xl text-sm font-semibold"></div>
+
+    <!-- Resultados -->
+    <section id="resultsSection" class="hidden space-y-5 pt-2">
+      <div class="flex flex-wrap items-center justify-between gap-2">
+        <div>
+          <h2 class="font-display text-2xl font-bold">Tus Recomendaciones</h2>
+          <p id="engineUsedLabel" class="text-xs theme-muted"></p>
+        </div>
+        <span id="resultsBadge" class="theme-badge border text-xs font-extrabold px-3.5 py-1.5 rounded-full"></span>
+      </div>
+      <div id="cardsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+    </section>
+
+  </main>
+
+  <!-- Modal de Juegos Guardados -->
+  <div id="favoritesModal" class="hidden fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="theme-card border rounded-3xl max-w-2xl w-full max-h-[85vh] flex flex-col shadow-2xl overflow-hidden">
+      <div class="p-5 border-b flex flex-wrap items-center justify-between gap-2" style="border-color: var(--border-color)">
+        <h3 class="font-display text-xl font-bold flex items-center gap-2">
+          <span>❤️</span> Mi Lista de Guardados
+        </h3>
+        <div class="flex items-center gap-2">
+          <button onclick="exportFavoritesJSON()" title="Descargar respaldo en JSON" class="theme-badge border px-3 py-1.5 rounded-lg text-xs font-bold hover:opacity-80 transition">
+            ⬇ Exportar .json
+          </button>
+          <label title="Cargar lista desde archivo JSON" class="theme-input border px-3 py-1.5 rounded-lg text-xs font-bold hover:opacity-80 transition cursor-pointer">
+            ⬆ Importar .json
+            <input type="file" accept=".json" onchange="importFavoritesJSON(event)" class="hidden" />
+          </label>
+          <button onclick="toggleFavoritesModal()" class="theme-input border px-3 py-1.5 rounded-lg text-xs font-bold hover:opacity-80">
+            ✕
+          </button>
+        </div>
+      </div>
+      <div id="favoritesList" class="p-5 overflow-y-auto space-y-3 flex-1"></div>
+    </div>
+  </div>
+
+  <script>
+    const PLATFORMS = [
+      { id: 'PC', label: '💻 PC (Steam)', theme: 'steam' },
+      { id: 'PlayStation 5', label: '🎮 PS5', theme: 'ps5' },
+      { id: 'PlayStation 4', label: '🎮 PS4', theme: 'ps5' },
+      { id: 'Xbox Series X/S', label: '❎ Xbox Series', theme: 'xbox' },
+      { id: 'Nintendo Switch', label: '🕹️ Nintendo Switch', theme: 'nintendo' },
+      { id: 'Android', label: '🤖 Android', theme: 'mobile' },
+      { id: 'iOS', label: '🍎 iOS', theme: 'mobile' }
+    ];
+
+    const GENRES = [
+      'Acción / Aventura', 'RPG / Rol', 'Shooter (FPS/TPS)', 'Mundo Abierto',
+      'Terror / Survival', 'Indie', 'Estrategia', 'Plataformas / Metroidvania',
+      'Carreras / Deportes', 'Puzzles / Misterio', 'Simulación', 'Multijugador / Co-op'
+    ];
+
+    let selectedPlatforms = new Set(['PC']);
+    let selectedGenres = new Set(['Acción / Aventura']);
+    let selectedCount = 3;
+    let savedFavorites = JSON.parse(localStorage.getItem('whatdoaiplay_favs') || '[]');
+
+    window.addEventListener('DOMContentLoaded', () => {
+      renderChips('platformsContainer', PLATFORMS, selectedPlatforms, true);
+      renderChips('genresContainer', GENRES.map(g => ({ id: g, label: g })), selectedGenres, false);
+      updateFavCounter();
+
+      const savedTheme = localStorage.getItem('whatdoaiplay_theme') || 'default';
+      setTheme(savedTheme);
+
+      const savedOpenRouter = localStorage.getItem('whatdoaiplay_openrouter_key');
+      const savedGroq = localStorage.getItem('whatdoaiplay_groq_key');
+      const savedGemini = localStorage.getItem('whatdoaiplay_gemini_key');
+      const savedRawg = localStorage.getItem('whatdoaiplay_rawg_key');
+
+      if (savedOpenRouter) document.getElementById('openrouterKey').value = savedOpenRouter;
+      if (savedGroq) document.getElementById('groqKey').value = savedGroq;
+      if (savedGemini) document.getElementById('geminiKey').value = savedGemini;
+      if (savedRawg) document.getElementById('rawgKey').value = savedRawg;
+    });
+
+    function setTheme(themeName) {
+      document.body.setAttribute('data-theme', themeName);
+      localStorage.setItem('whatdoaiplay_theme', themeName);
+      document.querySelectorAll('.theme-dot').forEach(dot => {
+        dot.classList.toggle('active-dot', dot.dataset.themeBtn === themeName);
+      });
+    }
+
+    function toggleConfig() {
+      document.getElementById('configPanel').classList.toggle('hidden');
+    }
+
+    function saveKeys() {
+      const orKey = document.getElementById('openrouterKey').value.trim();
+      const groqKey = document.getElementById('groqKey').value.trim();
+      const gKey = document.getElementById('geminiKey').value.trim();
+      const rKey = document.getElementById('rawgKey').value.trim();
+
+      if (orKey) localStorage.setItem('whatdoaiplay_openrouter_key', orKey);
+      if (groqKey) localStorage.setItem('whatdoaiplay_groq_key', groqKey);
+      if (gKey) localStorage.setItem('whatdoaiplay_gemini_key', gKey);
+      if (rKey) localStorage.setItem('whatdoaiplay_rawg_key', rKey);
+
+      document.getElementById('configPanel').classList.add('hidden');
+    }
+
+    function renderChips(containerId, items, stateSet, isPlatform) {
+      const container = document.getElementById(containerId);
+      container.innerHTML = '';
+      items.forEach(item => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.textContent = item.label;
+        btn.className = `chip-btn border px-4 py-2.5 rounded-xl text-xs md:text-sm font-semibold ${stateSet.has(item.id) ? 'active' : ''}`;
+        btn.onclick = () => {
+          if (stateSet.has(item.id)) {
+            stateSet.delete(item.id);
+            btn.classList.remove('active');
+          } else {
+            stateSet.add(item.id);
+            btn.classList.add('active');
+            if (isPlatform && item.theme) {
+              setTheme(item.theme);
+            }
+          }
+        };
+        container.appendChild(btn);
+      });
+    }
+
+    function selectCount(num) {
+      selectedCount = num;
+      document.querySelectorAll('.count-btn').forEach(btn => {
+        btn.classList.toggle('active', Number(btn.dataset.count) === num);
+      });
+    }
+
+    function showError(msg) {
+      const box = document.getElementById('errorBox');
+      box.textContent = msg;
+      box.classList.remove('hidden');
+    }
+
+    function renderSkeletons(count) {
+      const grid = document.getElementById('skeletonGrid');
+      grid.innerHTML = '';
+      for (let i = 0; i < count; i++) {
+        grid.innerHTML += `
+          <div class="theme-card border rounded-3xl overflow-hidden p-5 space-y-4">
+            <div class="skeleton-box h-36 w-full rounded-2xl"></div>
+            <div class="skeleton-box h-5 w-3/4 rounded-lg"></div>
+            <div class="skeleton-box h-3 w-1/2 rounded-lg"></div>
+            <div class="space-y-2 pt-2">
+              <div class="skeleton-box h-3 w-full rounded-lg"></div>
+              <div class="skeleton-box h-3 w-5/6 rounded-lg"></div>
+            </div>
+          </div>
+        `;
+      }
+    }
+
+    // Favoritos + Exportar / Importar JSON
+    function updateFavCounter() {
+      document.getElementById('favCounter').textContent = savedFavorites.length;
+    }
+
+    function toggleFavorite(juego, btnElement) {
+      const index = savedFavorites.findIndex(f => f.titulo === juego.titulo);
+      if (index > -1) {
+        savedFavorites.splice(index, 1);
+        if (btnElement) btnElement.innerHTML = '🤍 Guardar';
+      } else {
+        savedFavorites.push(juego);
+        if (btnElement) btnElement.innerHTML = '❤️ Guardado';
+      }
+      localStorage.setItem('whatdoaiplay_favs', JSON.stringify(savedFavorites));
+      updateFavCounter();
+    }
+
+    function exportFavoritesJSON() {
+      if (savedFavorites.length === 0) return alert('No tienes juegos guardados para exportar.');
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(savedFavorites, null, 2));
+      const downloadAnchor = document.createElement('a');
+      downloadAnchor.setAttribute("href", dataStr);
+      downloadAnchor.setAttribute("download", "WhatDoAIplay_Guardados.json");
+      document.body.appendChild(downloadAnchor);
+      downloadAnchor.click();
+      downloadAnchor.remove();
+    }
+
+    function importFavoritesJSON(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const imported = JSON.parse(e.target.result);
+          if (Array.isArray(imported)) {
+            savedFavorites = imported;
+            localStorage.setItem('whatdoaiplay_favs', JSON.stringify(savedFavorites));
+            updateFavCounter();
+            renderFavoritesList();
+          } else {
+            alert('El archivo JSON no tiene el formato válido.');
+          }
+        } catch {
+          alert('Error al leer el archivo JSON.');
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    function toggleFavoritesModal() {
+      const modal = document.getElementById('favoritesModal');
+      modal.classList.toggle('hidden');
+      if (!modal.classList.contains('hidden')) {
+        renderFavoritesList();
+      }
+    }
+
+    function renderFavoritesList() {
+      const list = document.getElementById('favoritesList');
+      if (savedFavorites.length === 0) {
+        list.innerHTML = '<p class="text-sm theme-muted text-center py-8">Aún no has guardado ningún juego. Presiona "🤍 Guardar" en tus recomendaciones favoritas.</p>';
+        return;
+      }
+      list.innerHTML = '';
+      savedFavorites.forEach((juego, idx) => {
+        const item = document.createElement('div');
+        item.className = 'theme-input border p-4 rounded-2xl flex items-center justify-between gap-3';
+        item.innerHTML = `
+          <div>
+            <h4 class="font-bold text-sm">${juego.titulo} <span class="text-xs theme-muted">(${juego.anio})</span></h4>
+            <p class="text-xs theme-muted mt-0.5">${juego.plataformas_disponibles.join(', ')} • ${juego.genero_principal}</p>
+          </div>
+          <div class="flex items-center gap-2">
+            <a href="https://www.youtube.com/results?search_query=${encodeURIComponent(juego.titulo + ' official trailer')}" target="_blank"
+               class="theme-badge border px-2.5 py-1.5 rounded-lg text-xs font-bold hover:opacity-80">
+              ▶ Tráiler
+            </a>
+            <button onclick="removeFavorite(${idx})" class="text-xs text-red-500 font-bold px-2 py-1.5 hover:bg-red-500/10 rounded-lg">
+              Quitar
+            </button>
+          </div>
+        `;
+        list.appendChild(item);
+      });
+    }
+
+    function removeFavorite(idx) {
+      savedFavorites.splice(idx, 1);
+      localStorage.setItem('whatdoaiplay_favs', JSON.stringify(savedFavorites));
+      updateFavCounter();
+      renderFavoritesList();
+    }
+
+    async function fetchGameImage(title, rawgKey) {
+      if (!rawgKey) return null;
+      try {
+        const res = await fetch(`https://api.rawg.io/api/games?key=${rawgKey}&search=${encodeURIComponent(title)}&page_size=1`);
+        const data = await res.json();
+        return data.results?.[0]?.background_image || null;
+      } catch {
+        return null;
+      }
+    }
+
+    function safeParseJSON(text) {
+      let cleaned = text.replace(/```json/gi, '').replace(/```/g, '').trim();
+      const firstBrace = cleaned.indexOf('{');
+      const lastBrace = cleaned.lastIndexOf('}');
+      if (firstBrace !== -1 && lastBrace !== -1) {
+        cleaned = cleaned.substring(firstBrace, lastBrace + 1);
+      }
+      return JSON.parse(cleaned);
+    }
+
+    // MOTOR 1: OpenRouter
+    async function callOpenRouter(apiKey, prompt) {
+      const freeModels = [
+        'meta-llama/llama-3.3-70b-instruct:free',
+        'mistralai/mistral-small-3.1-24b-instruct:free',
+        'google/gemma-3-27b-it:free'
+      ];
+      for (const model of freeModels) {
+        try {
+          const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${apiKey}`,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              model: model,
+              messages: [{ role: 'user', content: prompt }],
+              temperature: 0.7
+            })
+          });
+          if (!res.ok) continue;
+          const data = await res.json();
+          const parsed = safeParseJSON(data.choices[0].message.content);
+          if (parsed && Array.isArray(parsed.juegos)) return { data: parsed, engine: `OpenRouter (${model.split('/')[1]})` };
+        } catch { continue; }
+      }
+      return null;
+    }
+
+    // MOTOR 2: Groq
+    async function callGroq(apiKey, prompt) {
+      const groqModels = ['llama-3.3-70b-versatile', 'llama-3.1-8b-instant'];
+      for (const model of groqModels) {
+        try {
+          const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${apiKey}`,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              model: model,
+              messages: [{ role: 'user', content: prompt }],
+              response_format: { type: 'json_object' },
+              temperature: 0.7
+            })
+          });
+          if (!res.ok) continue;
+          const data = await res.json();
+          const parsed = safeParseJSON(data.choices[0].message.content);
+          if (parsed && Array.isArray(parsed.juegos)) return { data: parsed, engine: `Groq (${model})` };
+        } catch { continue; }
+      }
+      return null;
+    }
+
+    // MOTOR 3: Google Gemini
+    async function callGemini(apiKey, prompt) {
+      try {
+        const listRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`);
+        if (!listRes.ok) return null;
+        const listData = await listRes.json();
+        const models = (listData.models || [])
+          .filter(m => m.supportedGenerationMethods?.includes('generateContent') && m.name.includes('flash'))
+          .map(m => m.name)
+          .slice(0, 3);
+
+        for (const modelFullName of models) {
+          const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/${modelFullName}:generateContent?key=${apiKey}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              contents: [{ parts: [{ text: prompt }] }],
+              generationConfig: { temperature: 0.7, maxOutputTokens: 4096, responseMimeType: "application/json" }
+            })
+          });
+          if (!res.ok) continue;
+          const data = await res.json();
+          const parsed = safeParseJSON(data.candidates[0].content.parts[0].text);
+          if (parsed && Array.isArray(parsed.juegos)) return { data: parsed, engine: `Google (${modelFullName.replace('models/', '')})` };
+        }
+      } catch { return null; }
+      return null;
+    }
+
+    // MOTOR 4: Pollinations AI (Respaldo público sin clave)
+    async function callPollinationsFree(prompt) {
+      const res = await fetch('https://text.pollinations.ai/openai', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: 'openai',
+          messages: [
+            { role: 'system', content: 'Eres un experto en videojuegos. Responde siempre ÚNICAMENTE con JSON válido sin markdown.' },
+            { role: 'user', content: prompt }
+          ],
+          seed: Math.floor(Math.random() * 100000)
+        })
+      });
+      if (!res.ok) throw new Error('Error de conexión con el servidor público.');
+      const data = await res.json();
+      const parsed = safeParseJSON(data.choices[0].message.content);
+      if (parsed && Array.isArray(parsed.juegos)) return { data: parsed, engine: 'WhatDoAIplay Cloud Engine (Libre)' };
+      throw new Error('Formato inesperado del servidor.');
+    }
+
+    async function generateRecommendations() {
+      const openrouterKey = document.getElementById('openrouterKey').value.trim();
+      const groqKey = document.getElementById('groqKey').value.trim();
+      const geminiKey = document.getElementById('geminiKey').value.trim();
+      const rawgKey = document.getElementById('rawgKey').value.trim();
+      const extra = document.getElementById('extraPrompt').value.trim();
+
+      document.getElementById('errorBox').classList.add('hidden');
+
+      if (selectedPlatforms.size === 0) return showError('Selecciona al menos una plataforma.');
+      if (selectedGenres.size === 0) return showError('Selecciona al menos un género.');
+
+      const btn = document.getElementById('generateBtn');
+      const loading = document.getElementById('loadingState');
+      const loadingText = document.getElementById('loadingText');
+      const resultsSection = document.getElementById('resultsSection');
+
+      btn.disabled = true;
+      btn.classList.add('opacity-50');
+      renderSkeletons(selectedCount);
+      loading.classList.remove('hidden');
+      resultsSection.classList.add('hidden');
+
+      const platformsList = Array.from(selectedPlatforms).join(', ');
+      const genresList = Array.from(selectedGenres).join(', ');
+
+      const prompt = `Actúa como un curador experto en videojuegos para WhatDoAIplay?. Recomienda exactamente ${selectedCount} videojuegos reales y verificados que cumplan estrictamente con estas condiciones:
+- Plataformas disponibles del usuario: ${platformsList} (CADA juego recomendado DEBE estar disponible en al menos una de estas plataformas).
+- Géneros preferidos: ${genresList}.
+${extra ? `- Preferencia adicional del usuario: "${extra}".` : ''}
+
+Devuelve un JSON válido con esta estructura exacta (no uses comillas dobles dentro de las descripciones):
+{
+  "juegos": [
+    {
+      "titulo": "Nombre oficial del juego",
+      "anio": 2023,
+      "match_porcentaje": 97,
+      "plataformas_disponibles": ["Plataforma 1"],
+      "genero_principal": "Género",
+      "duracion_aprox": "15-20 horas",
+      "razon_personalizada": "Explicación persuasiva y breve de por qué encaja con sus gustos."
+    }
+  ]
+}`;
+
+      try {
+        let finalOutcome = null;
+
+        if (!finalOutcome && openrouterKey) {
+          loadingText.textContent = 'Consultando motor OpenRouter...';
+          finalOutcome = await callOpenRouter(openrouterKey, prompt);
+        }
+
+        if (!finalOutcome && groqKey) {
+          loadingText.textContent = 'Consultando motor ultrarrápido Groq...';
+          finalOutcome = await callGroq(groqKey, prompt);
+        }
+
+        if (!finalOutcome && geminiKey) {
+          loadingText.textContent = 'Consultando motor Google Gemini...';
+          finalOutcome = await callGemini(geminiKey, prompt);
+        }
+
+        if (!finalOutcome) {
+          loadingText.textContent = 'Generando recomendaciones en la nube...';
+          finalOutcome = await callPollinationsFree(prompt);
+        }
+
+        document.getElementById('engineUsedLabel').textContent = `Motor utilizado: ${finalOutcome.engine}`;
+        await renderCards(finalOutcome.data.juegos, rawgKey);
+
+      } catch (err) {
+        showError('Error: ' + err.message);
+      } finally {
+        btn.disabled = false;
+        btn.classList.remove('opacity-50');
+        loading.classList.add('hidden');
+      }
+    }
+
+    async function renderCards(juegos, rawgKey) {
+      const grid = document.getElementById('cardsGrid');
+      grid.innerHTML = '';
+      document.getElementById('resultsBadge').textContent = `${juegos.length} juegos encontrados`;
+
+      for (let i = 0; i < juegos.length; i++) {
+        const juego = juegos[i];
+        const imgUrl = await fetchGameImage(juego.titulo, rawgKey);
+        const matchScore = juego.match_porcentaje || (98 - i * 2);
+        const isFav = savedFavorites.some(f => f.titulo === juego.titulo);
+        
+        const platformsBadges = (juego.plataformas_disponibles || [])
+          .map(p => `<span class="theme-badge border text-[11px] px-2.5 py-0.5 rounded-md font-bold">${p}</span>`)
+          .join('');
+
+        const headerVisual = imgUrl
+          ? `<div class="h-48 w-full overflow-hidden relative">
+               <img src="${imgUrl}" alt="${juego.titulo}" class="w-full h-full object-cover group-hover:scale-105 transition duration-500" />
+               <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent"></div>
+               <span class="theme-gradient-btn absolute top-3 left-3 text-[11px] font-extrabold px-2.5 py-1 rounded-lg shadow">
+                 ⚡ ${matchScore}% Match
+               </span>
+               <span class="bg-black/75 text-white backdrop-blur-md absolute top-3 right-3 text-xs font-bold px-2.5 py-1 rounded-lg">
+                 ${juego.anio}
+               </span>
+             </div>`
+          : `<div class="theme-gradient-btn h-24 w-full p-4 flex items-end justify-between relative">
+               <div>
+                 <span class="bg-black/25 text-white text-[10px] font-extrabold px-2 py-0.5 rounded-md uppercase tracking-wider">
+                   ⚡ ${matchScore}% Match
+                 </span>
+                 <p class="text-xs font-bold uppercase tracking-wider opacity-95 mt-1">${juego.genero_principal}</p>
+               </div>
+               <span class="bg-black/30 text-white text-xs font-bold px-2.5 py-1 rounded-lg">${juego.anio}</span>
+             </div>`;
+
+        const card = document.createElement('article');
+        card.style.animationDelay = `${i * 80}ms`;
+        card.className = 'animate-card game-card theme-card border group rounded-3xl flex flex-col justify-between shadow-lg hover:-translate-y-1.5';
+        
+        card.innerHTML = `
+          <div>
+            ${headerVisual}
+            <div class="p-5 space-y-3">
+              <div>
+                <h3 class="font-display text-lg font-bold leading-snug">${juego.titulo}</h3>
+                <p class="text-xs theme-muted mt-1 font-medium">⏱️ ${juego.duracion_aprox} • ${juego.genero_principal}</p>
+              </div>
+              <p class="text-sm theme-muted leading-relaxed">
+                ${juego.razon_personalizada}
+              </p>
+            </div>
+          </div>
+          
+          <div class="px-5 pb-5 pt-2 space-y-3">
+            <div class="flex flex-wrap gap-1.5">
+              ${platformsBadges}
+            </div>
+            
+            <div class="pt-2 border-t flex items-center justify-between gap-2" style="border-color: var(--border-color)">
+              <a href="https://www.youtube.com/results?search_query=${encodeURIComponent(juego.titulo + ' official trailer')}" target="_blank"
+                 class="theme-input border flex-1 text-center py-2 rounded-xl text-xs font-bold hover:opacity-80 transition">
+                ▶ Ver Tráiler
+              </a>
+              <button type="button" class="fav-btn theme-input border px-3.5 py-2 rounded-xl text-xs font-bold hover:opacity-80 transition">
+                ${isFav ? '❤️ Guardado' : '🤍 Guardar'}
+              </button>
+            </div>
+          </div>
+        `;
+
+        const favBtn = card.querySelector('.fav-btn');
+        favBtn.onclick = () => toggleFavorite(juego, favBtn);
+
+        grid.appendChild(card);
+      }
+
+      document.getElementById('resultsSection').classList.remove('hidden');
+      document.getElementById('resultsSection').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    // =========================================
+    // MOTOR DE MÚSICA AMBIENTAL (WEB AUDIO API)
+    // =========================================
+    let audioCtx = null;
+    let isMusicPlaying = false;
+    let musicInterval = null;
+    let masterGain = null;
+
+    const CONSOLE_CHORDS = {
+      default:  [[261.63, 329.63, 392.00, 493.88], [220.00, 261.63, 329.63, 392.00], [174.61, 220.00, 261.63, 349.23], [196.00, 246.94, 293.66, 392.00]],
+      ps5:      [[293.66, 369.99, 440.00, 554.37], [246.94, 293.66, 369.99, 440.00], [196.00, 246.94, 293.66, 369.99], [220.00, 277.18, 329.63, 415.30]],
+      nintendo: [[329.63, 415.30, 493.88, 622.25], [277.18, 329.63, 415.30, 493.88], [220.00, 277.18, 329.63, 415.30], [246.94, 311.13, 369.99, 466.16]],
+      xbox:     [[146.83, 220.00, 261.63, 329.63], [130.81, 196.00, 246.94, 293.66], [110.00, 164.81, 196.00, 246.94], [123.47, 185.00, 220.00, 277.18]],
+      steam:    [[220.00, 261.63, 329.63, 392.00], [196.00, 246.94, 293.66, 369.99], [174.61, 220.00, 261.63, 329.63], [164.81, 196.00, 246.94, 293.66]],
+      mobile:   [[349.23, 440.00, 523.25, 659.25], [293.66, 349.23, 440.00, 523.25], [261.63, 329.63, 392.00, 493.88], [293.66, 392.00, 440.00, 523.25]]
+    };
+
+    let chordStep = 0;
+
+    function playAmbientPad(frequencies) {
+      if (!audioCtx || !isMusicPlaying) return;
+      const now = audioCtx.currentTime;
+
+      frequencies.forEach((freq, idx) => {
+        const osc = audioCtx.createOscillator();
+        const noteGain = audioCtx.createGain();
+        const filter = audioCtx.createBiquadFilter();
+
+        osc.type = idx % 2 === 0 ? 'sine' : 'triangle';
+        osc.frequency.setValueAtTime(freq, now);
+
+        filter.type = 'lowpass';
+        filter.frequency.setValueAtTime(650, now);
+
+        noteGain.gain.setValueAtTime(0.0001, now);
+        noteGain.gain.exponentialRampToValueAtTime(0.06, now + 1.2);
+        noteGain.gain.exponentialRampToValueAtTime(0.0001, now + 4.2);
+
+        osc.connect(filter);
+        filter.connect(noteGain);
+        noteGain.connect(masterGain);
+
+        osc.start(now);
+        osc.stop(now + 4.3);
+      });
+    }
+
+    function toggleAmbientMusic() {
+      const icon = document.getElementById('musicIcon');
+      const btn = document.getElementById('musicBtn');
+
+      if (!isMusicPlaying) {
+        if (!audioCtx) {
+          audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+          masterGain = audioCtx.createGain();
+          masterGain.gain.setValueAtTime(0.5, audioCtx.currentTime);
+          masterGain.connect(audioCtx.destination);
+        }
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+
+        isMusicPlaying = true;
+        icon.textContent = '🔊';
+        btn.classList.add('theme-badge');
+
+        const triggerNextChord = () => {
+          const currentTheme = document.body.getAttribute('data-theme') || 'default';
+          const progression = CONSOLE_CHORDS[currentTheme] || CONSOLE_CHORDS.default;
+          playAmbientPad(progression[chordStep % progression.length]);
+          chordStep++;
+        };
+
+        triggerNextChord();
+        musicInterval = setInterval(triggerNextChord, 3800);
+      } else {
+        isMusicPlaying = false;
+        clearInterval(musicInterval);
+        icon.textContent = '🔇';
+        btn.classList.remove('theme-badge');
+      }
+    }
+  </script>
+</body>
+</html>
